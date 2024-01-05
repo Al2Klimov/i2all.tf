@@ -1,0 +1,14 @@
+---
+- hosts: all
+  become: true
+  become_method: sudo
+  tasks:
+    - yum:
+        name: epel-release
+    - rpm_key:
+        key: https://packages.icinga.com/icinga.key
+    - get_url:
+        dest: /etc/yum.repos.d/ICINGA-release.repo
+        url: https://packages.icinga.com/centos/ICINGA-release.repo
+    - yum:
+        name: icinga2
