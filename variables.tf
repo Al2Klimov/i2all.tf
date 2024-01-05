@@ -12,6 +12,10 @@ variable "openstack_credential_id" {
 variable "openstack_credential_secret" {
 }
 
+variable "vm_avzone" {
+	default = "HetznerNBG4"
+}
+
 variable "vm_network" {
 	default = "icinga-testing-network"
 }
