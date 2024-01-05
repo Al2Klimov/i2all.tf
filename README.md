@@ -2,6 +2,7 @@
 2. Create an `.auto.tfvars` file from it like below
 3. Run `terraform init`
 4. Run `terraform apply`
+5. Run `python3 tf2ansible.py < terraform.tfstate > inventory.txt`
 
 ## .auto.tfvars
 
