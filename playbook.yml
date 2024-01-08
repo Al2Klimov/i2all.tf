@@ -12,3 +12,71 @@
         url: https://packages.icinga.com/centos/ICINGA-release.repo
     - yum:
         name: icinga2
+
+- hosts: 'all:!*master-1'
+  become: true
+  become_method: sudo
+  become_user: icinga
+  tasks:
+    - shell: >-
+        icinga2 node setup --zone {{ inventory_hostname
+        }} --endpoint placeholder --cn {{ inventory_hostname
+        }} --listen 0.0.0.0 --accept-config --accept-commands --disable-confd
+      args:
+        creates: /etc/icinga2/features-enabled/api.conf
+    - shell: >-
+        openssl req -new -nodes -subj /CN={{ inventory_hostname
+        }} -key {{ inventory_hostname }}.key -out {{ inventory_hostname }}.csr
+      args:
+        chdir: /var/lib/icinga2/certs
+        creates: '/var/lib/icinga2/certs/{{ inventory_hostname }}.csr'
+    - fetch:
+        dest: .download/csr.d/
+        flat: true
+        src: '/var/lib/icinga2/certs/{{ inventory_hostname }}.csr'
+
+- hosts: '*master-1'
+  become: true
+  become_method: sudo
+  become_user: icinga
+  tasks:
+    - copy:
+        dest: /var/lib/icinga2/ansible-csr.d/
+        src: .download/csr.d/
+    - shell: >-
+        icinga2 node setup --master --cn {{ inventory_hostname
+        }} --listen 0.0.0.0 --accept-config --accept-commands --disable-confd
+      args:
+        creates: /etc/icinga2/features-enabled/api.conf
+    - file:
+        path: /var/lib/icinga2/ansible-cert.d
+        owner: icinga
+        state: directory
+    - with_inventory_hostnames: 'all:!*master-1'
+      shell: >-
+        icinga2 pki sign-csr --csr ansible-csr.d/{{ item
+        }}.csr --cert ansible-cert.d/{{ item }}.crt
+      args:
+        chdir: /var/lib/icinga2
+        creates: '/var/lib/icinga2/ansible-cert.d/{{ item }}.crt'
+    - fetch:
+        dest: .download/
+        flat: true
+        src: /var/lib/icinga2/ca/ca.crt
+    - with_inventory_hostnames: 'all:!*master-1'
+      fetch:
+        dest: .download/cert.d/
+        flat: true
+        src: '/var/lib/icinga2/ansible-cert.d/{{ item }}.crt'
+
+- hosts: 'all:!*master-1'
+  become: true
+  become_method: sudo
+  become_user: icinga
+  tasks:
+    - copy:
+        dest: /var/lib/icinga2/certs/
+        src: .download/ca.crt
+    - copy:
+        dest: /var/lib/icinga2/certs/
+        src: '.download/cert.d/{{ inventory_hostname }}.crt'
