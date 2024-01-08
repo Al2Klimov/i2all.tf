@@ -12,7 +12,11 @@ variable "openstack_credential_id" {
 variable "openstack_credential_secret" {
 }
 
-variable "vm_avzone" {
+variable "vm_avzone1" {
+	default = "NorisNBG3"
+}
+
+variable "vm_avzone2" {
 	default = "HetznerNBG4"
 }
 
