@@ -80,3 +80,15 @@
     - copy:
         dest: /var/lib/icinga2/certs/
         src: '.download/cert.d/{{ inventory_hostname }}.crt'
+
+- hosts: all
+  become: true
+  become_method: sudo
+  tasks:
+    - copy:
+        dest: /etc/icinga2/
+        src: zones.conf
+    - service:
+        name: icinga2
+        state: started
+        enabled: true
