@@ -12,6 +12,8 @@
         url: https://packages.icinga.com/centos/ICINGA-release.repo
     - yum:
         name: icinga2
+    - yum:
+        name: icinga2-selinux
 
 - hosts: 'all:!*master-1'
   become: true
