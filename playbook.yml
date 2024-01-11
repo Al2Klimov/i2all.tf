@@ -14,6 +14,11 @@
         name: icinga2
     - yum:
         name: icinga2-selinux
+    - yum:
+        name: python3
+    - copy:
+        dest: /usr/lib64/nagios/plugins/
+        src: check_random.py
 
 - hosts: 'all:!*master-1'
   become: true

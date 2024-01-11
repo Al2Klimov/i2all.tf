@@ -63,3 +63,15 @@ for (kind, zz) in zones.items():
 \tendpoints = [ "{}" ]
 \tparent = "{}"
 }}'''.format(name, '", "'.join(endpoints), next(parents)))
+
+print('''
+object CheckCommand "check_random.py" {
+\tcommand = [ "python3", PluginDir + "/check_random.py" ]
+
+\targuments = {
+\t\t"-l" = "$random_limit$"
+\t\t"-w" = "$random_warning$"
+\t\t"-c" = "$random_critical$"
+\t\t"-u" = "$random_unknown$"
+\t}
+}''')
