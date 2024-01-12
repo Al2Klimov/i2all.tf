@@ -13,33 +13,33 @@ unzoned = {}
 zones = {}
 
 for (child, parent) in hierarchy.items():
-    unzoned[child] = set()
-    unzoned[parent] = set()
+    unzoned[child] = {}
+    unzoned[parent] = {}
 
 for resource in json.load(sys.stdin)['resources']:
     if resource['type'] == 'openstack_compute_instance_v2':
         for instance in resource['instances']:
-            print('''object Endpoint "{name}" {{
-\thost = "{access_ip_v4}"
-}}
-object Host "{name}" {{ }}'''.format(**instance['attributes']))
-
             name = instance['attributes']['name']
 
-            haystack: set
             for (kind, haystack) in unzoned.items():
                 if kind + '-' in name:
-                    haystack.add(name)
+                    haystack[name] = instance['attributes']
                     break
 
-haystack: set
+haystack: dict
 for (kind, haystack) in unzoned.items():
     m = maxnodes.get(kind) or 2
     zones[kind] = zz = {}
     zone = []
 
     while haystack:
-        zone.append(haystack.pop())
+        (name, attrs) = haystack.popitem()
+        zone.append(name)
+
+        print('''object Endpoint "{name}" {{
+\thost = "{access_ip_v4}"
+}}
+object Host "{name}" {{ }}'''.format(**attrs))
 
         if len(zone) >= m or not haystack:
             zz['+'.join(zone)] = zone

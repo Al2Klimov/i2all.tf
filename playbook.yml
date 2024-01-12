@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: '*master-*:*sat-*:*agent-*'
   become: true
   become_method: sudo
   tasks:
@@ -34,7 +34,7 @@
         repo: 'https://github.com/Linuxfabrik/{{ item.project }}.git'
         version: '{{ item.commit }}'
 
-- hosts: 'all:!*master-1'
+- hosts: '*master-2:*sat-*:*agent-*'
   become: true
   become_method: sudo
   become_user: icinga
@@ -73,7 +73,7 @@
         path: /var/lib/icinga2/ansible-cert.d
         owner: icinga
         state: directory
-    - with_inventory_hostnames: 'all:!*master-1'
+    - with_inventory_hostnames: '*master-2:*sat-*:*agent-*'
       shell: >-
         icinga2 pki sign-csr --csr ansible-csr.d/{{ item
         }}.csr --cert ansible-cert.d/{{ item }}.crt
@@ -84,13 +84,13 @@
         dest: .download/
         flat: true
         src: /var/lib/icinga2/ca/ca.crt
-    - with_inventory_hostnames: 'all:!*master-1'
+    - with_inventory_hostnames: '*master-2:*sat-*:*agent-*'
       fetch:
         dest: .download/cert.d/
         flat: true
         src: '/var/lib/icinga2/ansible-cert.d/{{ item }}.crt'
 
-- hosts: 'all:!*master-1'
+- hosts: '*master-2:*sat-*:*agent-*'
   become: true
   become_method: sudo
   become_user: icinga
@@ -102,7 +102,7 @@
         dest: /var/lib/icinga2/certs/
         src: '.download/cert.d/{{ inventory_hostname }}.crt'
 
-- hosts: all
+- hosts: '*master-*:*sat-*:*agent-*'
   become: true
   become_method: sudo
   tasks:
