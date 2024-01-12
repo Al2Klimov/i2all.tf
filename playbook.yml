@@ -1,4 +1,32 @@
 ---
+- hosts: '*db'
+  become: true
+  become_method: sudo
+  tasks:
+    - yum:
+        name: createrepo
+    - file:
+        path: /opt/influxdata
+        state: directory
+    - get_url:
+        dest: /opt/influxdata/
+        url: https://dl.influxdata.com/influxdb/releases/influxdb-1.8.10.x86_64.rpm
+        checksum: sha256:cb550bc8a62e334b070f9cb2247921d47007b74c2343c95b0c3fe12077536e1c
+    - shell: createrepo /opt/influxdata
+      args:
+        creates: /opt/influxdata/repodata/repomd.xml
+    - yum_repository:
+        name: influxdata
+        description: influxdata
+        baseurl: file:///opt/influxdata
+        gpgcheck: false
+    - yum:
+        name: influxdb
+    - service:
+        name: influxdb
+        state: started
+        enabled: true
+
 - hosts: '*master-*:*sat-*:*agent-*'
   become: true
   become_method: sudo
