@@ -10,15 +10,29 @@
     - get_url:
         dest: /etc/yum.repos.d/ICINGA-release.repo
         url: https://packages.icinga.com/centos/ICINGA-release.repo
-    - yum:
-        name: icinga2
-    - yum:
-        name: icinga2-selinux
-    - yum:
-        name: python3
+    - loop:
+        - git
+        - icinga2
+        - icinga2-selinux
+        - python3
+        - python36-psutil
+      yum:
+        name: '{{ item }}'
     - copy:
         dest: /usr/lib64/nagios/plugins/
         src: check_random.py
+    - file:
+        path: /opt/Linuxfabrik
+        state: directory
+    - loop:
+        - project: lib
+          commit: 21542560ece9dffa2818fd16ee0495883271e7dc # 2023112901
+        - project: monitoring-plugins
+          commit: 096aa98a7d81d169d4492c00f94d0bc336b061dd # 2023112901
+      git:
+        dest: '/opt/Linuxfabrik/{{ item.project }}'
+        repo: 'https://github.com/Linuxfabrik/{{ item.project }}.git'
+        version: '{{ item.commit }}'
 
 - hosts: 'all:!*master-1'
   become: true

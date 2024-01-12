@@ -90,4 +90,8 @@ object CheckCommand "check_random.py" {
 \t\t"-c" = "$random_critical$"
 \t\t"-u" = "$random_unknown$"
 \t}
+}
+
+object CheckCommand "memory-usage" {
+\tcommand = [ "python3", "/opt/Linuxfabrik/monitoring-plugins/check-plugins/memory-usage/memory-usage" ]
 }''')
