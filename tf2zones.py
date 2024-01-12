@@ -102,4 +102,8 @@ object CheckCommand "check_random.py" {
 
 object CheckCommand "memory-usage" {
 \tcommand = [ "python3", "/opt/Linuxfabrik/monitoring-plugins/check-plugins/memory-usage/memory-usage" ]
+}
+
+template InfluxdbWriter default {
+\tenable_ha = true
 }''')

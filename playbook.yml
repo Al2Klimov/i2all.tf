@@ -26,6 +26,15 @@
         name: influxdb
         state: started
         enabled: true
+    - yum:
+        name: epel-release
+    - yum:
+        name: python2-pip
+    - pip:
+        name: influxdb
+        version: 3.0.0
+    - influxdb_database:
+        database_name: icinga2
 
 - hosts: '*master-*:*sat-*:*agent-*'
   become: true
@@ -129,6 +138,24 @@
     - copy:
         dest: /var/lib/icinga2/certs/
         src: '.download/cert.d/{{ inventory_hostname }}.crt'
+
+- hosts: '*master-*'
+  become: true
+  become_method: sudo
+  tasks:
+    - replace:
+        path: /etc/icinga2/features-available/influxdb.conf
+        regexp: //
+        replace: ''
+    - with_inventory_hostnames: '*db'
+      lineinfile:
+        path: /etc/icinga2/features-available/influxdb.conf
+        regexp: host =
+        line: '  host = "{{ hostvars[item].ansible_default_ipv4.address }}"'
+    - file:
+        path: /etc/icinga2/features-enabled/influxdb.conf
+        state: link
+        src: /etc/icinga2/features-available/influxdb.conf
 
 - hosts: '*master-*:*sat-*:*agent-*'
   become: true
