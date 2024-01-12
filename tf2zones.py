@@ -21,7 +21,8 @@ for resource in json.load(sys.stdin)['resources']:
         for instance in resource['instances']:
             print('''object Endpoint "{name}" {{
 \thost = "{access_ip_v4}"
-}}'''.format(**instance['attributes']))
+}}
+object Host "{name}" {{ }}'''.format(**instance['attributes']))
 
             name = instance['attributes']['name']
 
@@ -65,6 +66,21 @@ for (kind, zz) in zones.items():
 }}'''.format(name, '", "'.join(endpoints), next(parents)))
 
 print('''
+template Host default {
+\tcheck_command = "check_random.py"
+\tvars.random_limit = 10
+\tvars.random_warning = 6
+\tvars.random_critical = 7
+\tvars.random_unknown = 8
+
+\tfor (z in get_objects(Zone)) {
+\t\tif (name in z.endpoints) {
+\t\t\tzone = z.parent || z.name
+\t\t\tbreak
+\t\t}
+\t}
+}
+
 object CheckCommand "check_random.py" {
 \tcommand = [ "python3", PluginDir + "/check_random.py" ]
 
