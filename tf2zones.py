@@ -76,9 +76,17 @@ template Host default {
 \tfor (z in get_objects(Zone)) {
 \t\tif (name in z.endpoints) {
 \t\t\tzone = z.parent || z.name
+\t\t\tvars.service_zone = if (name.contains("agent-")) { z.parent } else { z.name }
 \t\t\tbreak
 \t\t}
 \t}
+}
+
+apply Service "memory-usage" {
+\tcheck_command = "memory-usage"
+\tzone = host.vars.service_zone
+\tcommand_endpoint = host.name
+\tassign where true
 }
 
 object CheckCommand "check_random.py" {
