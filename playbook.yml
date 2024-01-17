@@ -2,28 +2,45 @@
 - hosts: '*db'
   become: true
   become_method: sudo
+  vars:
+    packages:
+      - name: influxdb
+        url: https://dl.influxdata.com/influxdb/releases/influxdb-1.8.10.x86_64.rpm
+        sha256: cb550bc8a62e334b070f9cb2247921d47007b74c2343c95b0c3fe12077536e1c
+      - name: grafana
+        url: https://dl.grafana.com/oss/release/grafana-10.2.3-1.x86_64.rpm
+        sha256: 7155e5ff4029d56c3fa16d960e57b31eee34250b7c0d3a118dd2fb5e2009d222
   tasks:
     - yum:
         name: createrepo
-    - file:
-        path: /opt/influxdata
+    - loop: '{{ packages }}'
+      file:
+        path: '/opt/{{ item.name }}'
         state: directory
-    - get_url:
-        dest: /opt/influxdata/
-        url: https://dl.influxdata.com/influxdb/releases/influxdb-1.8.10.x86_64.rpm
-        checksum: sha256:cb550bc8a62e334b070f9cb2247921d47007b74c2343c95b0c3fe12077536e1c
-    - shell: createrepo /opt/influxdata
+    - loop: '{{ packages }}'
+      get_url:
+        dest: '/opt/{{ item.name }}/'
+        url: '{{ item.url }}'
+        checksum: 'sha256:{{ item.sha256 }}'
+    - loop: '{{ packages }}'
+      shell: 'createrepo /opt/{{ item.name }}'
       args:
-        creates: /opt/influxdata/repodata/repomd.xml
-    - yum_repository:
-        name: influxdata
-        description: influxdata
-        baseurl: file:///opt/influxdata
+        creates: '/opt/{{ item.name }}/repodata/repomd.xml'
+    - loop: '{{ packages }}'
+      yum_repository:
+        name: '{{ item.name }}'
+        description: '{{ item.name }}'
+        baseurl: 'file:///opt/{{ item.name }}'
         gpgcheck: false
-    - yum:
-        name: influxdb
+    - loop: '{{ packages }}'
+      yum:
+        name: '{{ item.name }}'
     - service:
         name: influxdb
+        state: started
+        enabled: true
+    - service:
+        name: grafana-server
         state: started
         enabled: true
     - yum:
