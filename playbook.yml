@@ -54,6 +54,9 @@
         database_name: icinga2
     - yum:
         name: mariadb-server
+    - copy:
+        dest: /etc/my.cnf.d/icingadb.cnf
+        src: my.cnf
     - service:
         name: mariadb
         state: started
@@ -62,6 +65,8 @@
         name: MySQL-python
     - mysql_db:
         name: icinga
+    - mysql_db:
+        name: icingadb
 
 - hosts: '*master-*:*sat-*:*agent-*'
   become: true
@@ -79,6 +84,7 @@
         - icinga2
         - icinga2-ido-mysql
         - icinga2-selinux
+        - icingadb
         - python3
         - python36-psutil
       yum:
@@ -154,10 +160,13 @@
         dest: .download/cert.d/
         flat: true
         src: '/var/lib/icinga2/ansible-cert.d/{{ item }}.crt'
-    - fetch:
+    - loop:
+        - icinga2-ido-mysql/schema/mysql.sql
+        - icingadb/schema/mysql/schema.sql
+      fetch:
         dest: .download/
         flat: true
-        src: /usr/share/icinga2-ido-mysql/schema/mysql.sql
+        src: '/usr/share/{{ item }}'
 
 - hosts: '*db'
   become: true
@@ -177,6 +186,20 @@
         host: '%'
         password: icinga
         priv: 'icinga.*:ALL'
+    - copy:
+        dest: /opt/icingadb.sql
+        src: .download/schema.sql
+      register: icingadb_schema
+    - when: icingadb_schema.changed
+      mysql_db:
+        name: icingadb
+        state: import
+        target: /opt/icingadb.sql
+    - mysql_user:
+        name: icingadb
+        host: '%'
+        password: CHANGEME
+        priv: 'icingadb.*:ALL'
 
 - hosts: '*master-2:*sat-*:*agent-*'
   become: true
@@ -220,6 +243,31 @@
         path: /etc/icinga2/features-enabled/ido-mysql.conf
         state: link
         src: /etc/icinga2/features-available/ido-mysql.conf
+    - yum:
+        name: icingadb-redis
+    - service:
+        name: icingadb-redis
+        state: started
+        enabled: true
+    - file:
+        path: /etc/icinga2/features-enabled/icingadb.conf
+        state: link
+        src: /etc/icinga2/features-available/icingadb.conf
+    - with_inventory_hostnames: '*db'
+      copy:
+        dest: /etc/icingadb/config.yml
+        content: |
+          database:
+            host: {{ hostvars[item].ansible_default_ipv4.address }}
+            database: icingadb
+            user: icingadb
+            password: CHANGEME
+          redis:
+            host: localhost
+    - service:
+        name: icingadb
+        state: started
+        enabled: true
 
 - hosts: '*master-*:*sat-*:*agent-*'
   become: true
