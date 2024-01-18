@@ -9,6 +9,7 @@ def infloop(it):
 
 hierarchy = {'agent': 'sat', 'sat': 'master'}
 maxnodes = {'agent': 1}
+services = {'agent': 1000, 'sat': 4000, 'master': 16000}
 unzoned = {}
 zones = {}
 
@@ -24,6 +25,7 @@ for resource in json.load(sys.stdin)['resources']:
             for (kind, haystack) in unzoned.items():
                 if kind + '-' in name:
                     haystack[name] = instance['attributes']
+                    haystack[name]['services'] = services[kind]
                     break
 
 haystack: dict
@@ -39,6 +41,7 @@ for (kind, haystack) in unzoned.items():
         print('''object Endpoint "{name}" {{
 \thost = "{access_ip_v4}"
 }}
+globals.ServicesPerHost["{name}"] = {services}
 object Host "{name}" {{ }}'''.format(**attrs))
 
         if len(zone) >= m or not haystack:
@@ -103,6 +106,13 @@ template Host default {
 
 apply Service "memory-usage" {
 \tcheck_command = "memory-usage"
+\tzone = host.vars.service_zone
+\tcommand_endpoint = host.name
+\tassign where host.vars.apply_services
+}
+
+apply Service "check_random.py:" for (i in range(ServicesPerHost[host.name])) {
+\tcheck_command = "check_random.py"
 \tzone = host.vars.service_zone
 \tcommand_endpoint = host.name
 \tassign where host.vars.apply_services
