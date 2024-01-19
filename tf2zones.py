@@ -111,6 +111,13 @@ apply Service "memory-usage" {
 \tassign where host.vars.apply_services
 }
 
+apply Service "load" {
+\tcheck_command = "Lf-load"
+\tzone = host.vars.service_zone
+\tcommand_endpoint = host.name
+\tassign where host.vars.apply_services
+}
+
 apply Service "check_random.py:" for (i in range(ServicesPerHost[host.name])) {
 \tcheck_command = "check_random.py"
 \tzone = host.vars.service_zone
@@ -131,6 +138,10 @@ object CheckCommand "check_random.py" {
 
 object CheckCommand "memory-usage" {
 \tcommand = [ "python3", "/opt/Linuxfabrik/monitoring-plugins/check-plugins/memory-usage/memory-usage" ]
+}
+
+object CheckCommand "Lf-load" {
+\tcommand = [ "python3", "/opt/Linuxfabrik/monitoring-plugins/check-plugins/load/load" ]
 }
 
 template InfluxdbWriter default {
