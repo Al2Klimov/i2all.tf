@@ -1,4 +1,35 @@
 ---
+- hosts: '*ns'
+  become: true
+  become_method: sudo
+  tasks:
+    - yum:
+        name: bind
+    - lineinfile:
+        path: /etc/named.conf
+        regexp: listen-on
+        state: absent
+    - lineinfile:
+        path: /etc/named.conf
+        regexp: allow-query
+        state: absent
+    - service:
+        name: named
+        state: started
+        enabled: true
+
+- hosts: all
+  become: true
+  become_method: sudo
+  tasks:
+    - with_inventory_hostnames: '*ns'
+      blockinfile:
+        path: /etc/dhcp/dhclient.conf
+        block: supersede domain-name-servers {{ hostvars[item].ansible_default_ipv4.address }};
+      register: dhclient_conf
+    - when: dhclient_conf.changed
+      reboot: { }
+
 - hosts: '*db'
   become: true
   become_method: sudo
