@@ -39,7 +39,7 @@ for (kind, haystack) in unzoned.items():
         zone.append(name)
 
         print('''object Endpoint "{name}" {{
-\thost = "{access_ip_v4}"
+\thost = "{access_ip_v4}.nip.io"
 }}
 globals.ServicesPerHost["{name}"] = {services}
 object Host "{name}" {{ }}'''.format(**attrs))
