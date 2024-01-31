@@ -333,6 +333,9 @@
     - copy:
         dest: /etc/icinga2/
         src: zones.conf
+    - blockinfile:
+        path: /etc/sysconfig/icinga2
+        block: ICINGA2_RLIMIT_FILES=1000000
     - service:
         name: icinga2
         state: started
