@@ -125,6 +125,18 @@ apply Service "check_random.py:" for (i in range(ServicesPerHost[host.name])) {
 \tassign where host.vars.apply_services
 }
 
+apply ScheduledDowntime "" for (i in range(1)) to Service {
+\tauthor = "icingaadmin"
+\tcomment = "// TODO"
+\tzone = service.zone
+
+\tranges = {
+\t\t"monday - sunday" = "00:00-24:00"
+\t}
+
+\tassign where true
+}
+
 object CheckCommand "check_random.py" {
 \tcommand = [ "python3", PluginDir + "/check_random.py" ]
 
