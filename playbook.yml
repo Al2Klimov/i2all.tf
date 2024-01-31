@@ -300,6 +300,32 @@
         state: started
         enabled: true
 
+- hosts: '*dos'
+  become: true
+  become_method: sudo
+  tasks:
+    - yum:
+        name: epel-release
+    - yum:
+        name: golang
+    - copy:
+        dest: /opt/
+        src: i2dos
+    - shell: go build .
+      args:
+        chdir: /opt/i2dos
+        creates: /opt/i2dos/i2dos
+    - copy:
+        dest: /usr/lib/systemd/system/
+        src: i2dos@.service
+    - systemd:
+        daemon_reload: true
+    - with_inventory_hostnames: '*master-*'
+      service:
+        name: 'i2dos@{{ hostvars[item].ansible_default_ipv4.address }}'
+        state: started
+        enabled: true
+
 - hosts: '*master-*:*sat-*:*agent-*'
   become: true
   become_method: sudo

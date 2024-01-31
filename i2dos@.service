@@ -1,0 +1,8 @@
+[Unit]
+After=network.target
+
+[Service]
+ExecStart=/opt/i2dos/i2dos -c 1000 -H %i -u icingaadmin -p icinga
+
+[Install]
+WantedBy=multi-user.target
