@@ -137,6 +137,11 @@ apply ScheduledDowntime "" for (i in range(1)) to Service {
 \tassign where true
 }
 
+object ApiUser "icingaadmin" {
+\tpassword = "icinga"
+\tpermissions = [ "*" ]
+}
+
 object CheckCommand "check_random.py" {
 \tcommand = [ "python3", PluginDir + "/check_random.py" ]
 
